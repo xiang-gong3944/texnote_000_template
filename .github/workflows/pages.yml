@@ -2,7 +2,7 @@ name: Deploy PDF to GitHub Pages
 
 on:
   push:
-    branches: [release]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -22,10 +22,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v4
         with:
           root_file: main.tex
+          args: -pdfdvi -file-line-error -halt-on-error -interaction=nonstopmode
 
       - name: Prepare Pages site
         run: |
