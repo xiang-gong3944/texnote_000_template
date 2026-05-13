@@ -1,0 +1,87 @@
+name: Deploy PDF to GitHub Pages
+
+on:
+  push:
+    branches: [release]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+
+      - name: Prepare Pages site
+        run: |
+          mkdir -p public
+          cp out/main.pdf public/main.pdf
+          cat > public/index.html <<'EOF'
+          <!doctype html>
+          <html lang="ja">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>LaTeX Note</title>
+            <style>
+              body {
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                max-width: 720px;
+                margin: 4rem auto;
+                padding: 0 1.5rem;
+                line-height: 1.7;
+              }
+              code {
+                background: #f4f4f4;
+                padding: 0.1rem 0.3rem;
+                border-radius: 4px;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>LaTeX Note</h1>
+            <p>
+              This page hosts the latest published PDF built from this repository.
+            </p>
+            <p>
+              <a href="./main.pdf">Open PDF</a>
+            </p>
+            <p>
+              Source: <code>main.tex</code>
+            </p>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
