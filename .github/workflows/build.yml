@@ -1,0 +1,32 @@
+name: Build LaTeX PDF
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          latexmk_use_lualatex: false
+          latexmk_use_xelatex: false
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: note-pdf
+          path: out/*.pdf
+          if-no-files-found: error
